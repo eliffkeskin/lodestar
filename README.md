@@ -182,7 +182,17 @@ attached to the trace as Langfuse scores.
 
 ---
 
-## 7. Configuration reference
+## 7. Walkthrough
+
+**Lodestar Chatbot**
+
+![Answer with cited sources](docs/streamlit-ui.png)
+
+**Langfuse trace with evaluation scores**
+
+![Langfuse trace](docs/langfuse.png)
+
+## 8. Configuration reference
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -203,7 +213,7 @@ attached to the trace as Langfuse scores.
 
 ---
 
-## 8. Known limitations
+## 9. Known limitations
 
 * Small local models still over-answer when a *related* document scores high but
   does not contain the specific fact. The refusal rule in the prompt reduces but
