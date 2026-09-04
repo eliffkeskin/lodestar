@@ -1,0 +1,7 @@
+streamlit>=1.43
+anthropic>=0.40
+chromadb>=0.5
+sentence-transformers>=2.6
+pypdf>=4.0
+requests>=2.31
+beautifulsoup4>=4.12

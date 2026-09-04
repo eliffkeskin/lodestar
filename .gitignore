@@ -1,0 +1,36 @@
+# Secrets and local config
+.env
+.env-old
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Generated data (index, chats, metrics, eval output)
+chroma_store/
+conversations/
+metrics.csv
+eval_results.jsonl
+customer_map.json
+
+# Golden evaluation set: written against private documentation, not shared
+golden.jsonl
+*.backup
+
+# Knowledge base: contains internal / customer documentation, keep it out of git
+docs/
+docs.zip
+
+# Old versions and one-off scripts
+app-*.py
+jira_sync-*.py
+jira_ticket.py
+judge_prompt.md.backup
+
+# OS / editor
+.DS_Store
+.claude/
