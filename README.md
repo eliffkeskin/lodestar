@@ -29,32 +29,7 @@ machine.
 
 ## 2. Architecture
 
-```
-                 ┌──────────────────────────────────────────────────┐
- user question   │ app.py  (Streamlit UI + orchestration)           │
- / screenshot ──►│                                                  │
- / log file      │  generate_reply()                                │
-                 │   1. attachment?  → analyze_attachment()  (LLM)  │
-                 │   2. error_catalog.find_matches()   (regex)      │
-                 │   3. rag.retrieve()  → phrase_rag_answer() (LLM) │
-                 │   4. otherwise → escalate                        │
-                 │  _mask_blocks() – final customer-name filter     │
-                 └───────┬───────────────────────┬──────────────────┘
-                         │                       │
-        ┌────────────────▼──────────┐   ┌────────▼─────────────────────┐
-        │ rag.py                    │   │ LLM provider (_llm_create)   │
-        │ docs/ → chunks → Chroma   │   │  ollama  : granite4.1:8b     │
-        │ embed: paraphrase-        │   │            granite3.2-vision │
-        │   multilingual-mpnet      │   │  claude  : Anthropic API     │
-        │ rerank: ms-marco-MiniLM   │   └──────────────────────────────┘
-        │ keyword fallback search   │
-        └───────────────────────────┘
-
- Knowledge-base ingestion (sidebar):          Privacy layer:
-   rag.add_uploaded_document()                  jira_sync.mask()       (regex)
-   rag.add_url_document()/add_urls_bulk()       redaction_audit.audit_masking() (LLM)
-   jira_sync.JiraClient + issue_to_knowledge()  customer_map.code_for() (pseudonym)
-```
+![Lodestar Architecture](docs/lodestar-architecture.png)
 
 ### How an answer is produced (`app.generate_reply`)
 
