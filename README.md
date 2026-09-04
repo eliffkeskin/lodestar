@@ -178,6 +178,36 @@ check. Rows whose judge output cannot be parsed are marked `??` and excluded fro
 averages. Results are written to `eval_results.jsonl` and, unless `--no-langfuse`,
 attached to the trace as Langfuse scores.
 
+### Results on the reference corpus
+
+Measured on a private corpus of enterprise identity-platform documentation and
+support tickets (~1000 chunks), 20 golden questions in five categories. Four
+*unknown* questions have no answer in the corpus; the correct behaviour is to refuse.
+
+| | faithfulness | correctness | hallucinations / 20 |
+|---|---|---|---|
+| baseline | 0.77 | 0.79 | 4 |
+| after fixes | 0.87 | 0.87 | 2 |
+
+All four baseline hallucinations were in the *unknown* category; the 16 answerable
+questions had none. The bot knew the material, not its limits. One case returned
+a placeholder credential from a README as if it were real.
+
+Fixes that moved the numbers:
+
+- reranker threshold 0.15 → 0.5, calibrated on the golden set (good chunks 0.75–1.0,
+  chunks for unanswerable questions 0.1–0.45);
+- a prompt rule against presenting example or placeholder values as real;
+- a deterministic URL check, added after the LLM judge scored a fabricated URL 0.5
+  and 0.73 on consecutive runs without flagging it;
+- judge parse errors reported as `??` instead of silently scoring 0.
+
+The two remaining failures share a pattern: the top chunk is on-topic (score
+0.77–0.99) but does not answer the specific question. Neither threshold nor prompt
+separates "related" from "answers this", and the 8B generator cannot either — a
+model-capacity limit, now measured rather than suspected.
+
+
 `judge.py <trace_id>` scores a single existing Langfuse trace from live traffic.
 
 ---
@@ -196,7 +226,7 @@ attached to the trace as Langfuse scores.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `LODESTAR_PROVIDER` | `claude` in code, `ollama` in the example `.env` | Language-model backend |
+| `LODESTAR_PROVIDER` | `ollama` in code, `ollama` in the example `.env` | Language-model backend |
 | `LODESTAR_MODEL` / `LODESTAR_VISION_MODEL` | `granite4.1:8b` / `granite3.2-vision` | Ollama model names |
 | `LODESTAR_OLLAMA_URL` | `http://localhost:11434` | Ollama endpoint |
 | `LODESTAR_DOCS_DIR` / `LODESTAR_CHROMA_DIR` | `docs` / `chroma_store` | Knowledge base and index locations |
@@ -208,7 +238,7 @@ attached to the trace as Langfuse scores.
 | `LODESTAR_CUSTOMER_SALT` / `LODESTAR_CUSTOMER_MAP` | local salt / `customer_map.json` | Pseudonymisation |
 | `LODESTAR_CUSTOMER_NAMES` | empty | Comma-separated customer names and account codes the Jira import always masks |
 | `LODESTAR_PRICE_*` | Claude Sonnet rates | Cost estimation (Claude provider only) |
-| `LODESTAR_JUDGE_MODEL` | `llama3.1:8b` | Judge model for `run_eval.py` |
+| `LODESTAR_JUDGE_MODEL` | `granite4.1:8b` | Judge model for `run_eval.py` |
 | `LANGFUSE_*` | – | Tracing; set `LANGFUSE_TRACING_ENABLED=false` to disable |
 
 ---
@@ -217,10 +247,9 @@ attached to the trace as Langfuse scores.
 
 * Small local models still over-answer when a *related* document scores high but
   does not contain the specific fact. The refusal rule in the prompt reduces but
-  does not eliminate this.
+  does not eliminate this.(See S6)
 * Questions that span several documents can fall to the single-chunk fallback and
   lose detail.
 * Regex plus LLM redaction is best-effort; the human review step in the Jira import
   is the real control.
-* `python-dotenv`, `langfuse` and `openai` are imported but missing from
-  `requirements.txt`.
+
